@@ -35,7 +35,11 @@ public class Instruction {
     private int condition, specification, opcode, immediate, operand1, operand2, destination, offset;
     private String name, operator;
 
-    private Instruction(Long instruction) {
+    String getName() {
+        return name;
+    }
+
+    Instruction(Long instruction) {
         condition=-1;
         specification=-1;
         opcode=-1;
@@ -95,14 +99,14 @@ public class Instruction {
                 break;
             }
         }
-        if(name.equals(""))
+        if(name==null)
             System.out.println("Instruction Not Supported\n\n");
-        System.out.println(this);
+//        System.out.println(this);
     }
 
     void decode(int[] register_file) {
         String one="DECODE: Operation is %s, First Operand is R%d, Second Operand is R%d, Destination Register is R%d \nDECODE: Read Registers- R%d = %d, R%d = %d\n";
-        String two="DECODE: Operation is %s, First Operand is R%d, Second Immediate Operand is %d, Destination Register is R%d \nDECODE: Read Registers- R%d = %d, R%d = %d\n";
+        String two="DECODE: Operation is %s, First Operand is R%d, Second Immediate Operand is %d, Destination Register is R%d \nDECODE: Read Registers- R%d = %d\n";
         String ldr="DECODE: Operation is %s, Base Register is R%d, Destination Register is R%d, Offset is %d \nDECODE: Read Register- R%d = %d\n";
         String str="DECODE: Operation is %s, Base Register is R%d, Register whose value is to be stored in memory is R%d, Offset is %d \nDECODE: Read Registers- R%d = %d, R%d = %d\n";
         String branch="DECODE: Operation is %s\n";
@@ -111,7 +115,7 @@ public class Instruction {
             if(immediate==0)
                 System.out.printf(one, name, operand1, operand2, destination, operand1, register_file[operand1], operand2, register_file[operand2]);
             else
-                System.out.printf(two, name, operand1, operand2, destination, operand1, register_file[operand1], operand2, register_file[operand2]);
+                System.out.printf(two, name, operand1, operand2, destination, operand1, register_file[operand1]);
         }
         else if(specification==1) {
             if(name.equals("LDR"))
@@ -139,11 +143,11 @@ public class Instruction {
                 return a + b;
             case "==":
                 if (a == b) {
-                    // TODO: Set Z = 1
+                    Simulator.Z=1;
                     return 0;
                 }
                 if (a < b) {
-                    // TODO: Set N = 1
+                    Simulator.N=1;
                     return -1;
                 }
                 return 1;
@@ -151,28 +155,120 @@ public class Instruction {
                 return a | b;
             case "~":
                 return ~b;
+            case ".":
+                return b;
         }
         return -1;
     }
 
-    int execute(int[] register_file) {
+    int execute(int[] register_file, int[][] data_MEM) {
         String one="EXECUTE: %s %d and %d\n";
-        String mov="EXECUTE: %s value of R%d to R%d\n";
+        String mov_one="EXECUTE: %s value of R%d i.e. %d to R%d\n";
+        String mov_two="EXECUTE: %s %d to R%d\n";
+
         if(specification==0) {
-            if(opcode==13 || opcode==15)
-                System.out.printf(mov, operand2, destination);
-            else {
-                if (immediate == 0)
+            if (immediate == 0) {
+                if(opcode==13 || opcode==15)
+                    System.out.printf(mov_one, name, operand2, register_file[operand2], destination);
+                else
                     System.out.printf(one, name, register_file[operand1], register_file[operand2]);
+            }
+            else {
+                if(opcode==13 || opcode==15)
+                    System.out.printf(mov_two, name, operand2, destination);
                 else
                     System.out.printf(one, name, register_file[operand1], operand2);
             }
+
             return compute(register_file);
         }
         else if(specification==1) {
+            int index=operand2/4;
+            if(opcode==25) {
+                System.out.printf("EXECUTE: Load from Data Memory value of %dth element from base %d to register R%d\n", index + 1, operand1, destination);
+                return data_MEM[operand1][index];
+            }
+            if(opcode==24) {
+                System.out.printf("EXECUTE: Store value in register R%d to the %dth element from base %d in Data Memory\n", destination, index+1, operand1);
+                return -2;
+            }
+        }
+        else if(specification==2) {
+            if(opcode==0) {
+                int sig;
+                int bit=(offset>>23) & (0x1);
+                if(bit==1)
+                    sig=(0xFF000000) | (offset*4);
+                else
+                    sig=offset*4;
 
+                System.out.printf("EXECUTE: %s with offset = %d", name, offset);
+
+                if(condition==0 && Simulator.Z==1)
+                    register_file[15]+=4+sig;
+                else if(condition==1 && Simulator.Z!=1)
+                    register_file[15]+=4+sig;
+                else if(condition==11 && Simulator.N==1 && Simulator.Z==0)
+                    register_file[15]+=4+sig;
+                else if(condition==12 && Simulator.N==0 && Simulator.Z==0)
+                    register_file[15]+=4+sig;
+                else if(condition==13 && (Simulator.N==1 || Simulator.Z==1))
+                    register_file[15]+=4+sig;
+                else if(condition==10 && (Simulator.N==0 || Simulator.Z==1))
+                    register_file[15]+=4+sig;
+                else if(condition==14)
+                    register_file[15]+=4+sig;
+            }
         }
         return -1;
+    }
+
+    int memory(int[][] data_MEM, int result) {
+        if(specification==3)
+            return result;
+
+        if(condition==14) {
+            if(opcode==25) {
+                System.out.printf("MEMORY: Load value %d from memory\n", data_MEM[operand1][operand2/4]);
+                result=data_MEM[operand1][operand2];
+            }
+            else if(opcode==24) {
+                // TODO: Check
+                System.out.printf("MEMORY: Store value %d in memory\n", result);
+                data_MEM[operand1][operand2/4]=result;
+            }
+            else
+                System.out.println("MEMORY: No memory operation");
+        }
+        else
+            System.out.println("MEMORY: No memory operation");
+        return result;
+    }
+
+    void write_back(int[] register_file, int result) {
+        String write="WRITE-BACK: Write %d to R%d\n";
+        String no="WRITE-BACK: No write-back operation";
+
+        if(specification==0) {
+            if(opcode==10)
+                System.out.println(no);
+            else {
+                register_file[destination]=result;
+                System.out.printf(write, result, destination);
+            }
+        }
+        else if(specification==1) {
+            if(opcode==25) {
+                register_file[destination]=result;
+                System.out.printf(write, result, destination);
+            }
+            else
+                System.out.println(no);
+        }
+        else if(specification==2)
+            System.out.println(no);
+        else
+            Simulator.swi_exit();
     }
 
     @Override
@@ -190,6 +286,16 @@ public class Instruction {
         s+="Offset: "+Integer.toBinaryString(offset);
 
         return s;
+    }
+
+    static void deserialize() {
+        try {
+            Main.deserialize(presetInstructions);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
