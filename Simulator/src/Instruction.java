@@ -95,6 +95,8 @@ public class Instruction {
                 break;
             }
         }
+        if(name.equals(""))
+            System.out.println("Instruction Not Supported\n\n");
         System.out.println(this);
     }
 
@@ -121,6 +123,58 @@ public class Instruction {
             System.out.printf(branch, name);
     }
 
+    private int compute(int[] register_file) {
+        int a=register_file[operand1];
+        int b=operand2;
+        if(immediate==0)
+            b=register_file[operand2];
+        switch (operator) {
+            case "&":
+                return a & b;
+            case "^":
+                return a ^ b;
+            case "-":
+                return a - b;
+            case "+":
+                return a + b;
+            case "==":
+                if (a == b) {
+                    // TODO: Set Z = 1
+                    return 0;
+                }
+                if (a < b) {
+                    // TODO: Set N = 1
+                    return -1;
+                }
+                return 1;
+            case "|":
+                return a | b;
+            case "~":
+                return ~b;
+        }
+        return -1;
+    }
+
+    int execute(int[] register_file) {
+        String one="EXECUTE: %s %d and %d\n";
+        String mov="EXECUTE: %s value of R%d to R%d\n";
+        if(specification==0) {
+            if(opcode==13 || opcode==15)
+                System.out.printf(mov, operand2, destination);
+            else {
+                if (immediate == 0)
+                    System.out.printf(one, name, register_file[operand1], register_file[operand2]);
+                else
+                    System.out.printf(one, name, register_file[operand1], operand2);
+            }
+            return compute(register_file);
+        }
+        else if(specification==1) {
+
+        }
+        return -1;
+    }
+
     @Override
     public String toString() {
         String s="Instruction: "+Long.toBinaryString(instruction)+"\n";
@@ -144,6 +198,6 @@ public class Instruction {
         Main.deserialize(presetInstructions);
 
         Instruction instruction=new Instruction(Long.decode(Reader.next()));
-        instruction.decode(new int[10]);
+        instruction.decode(new int[16]);
     }
 }
