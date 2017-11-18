@@ -19,7 +19,13 @@ class PresetInstruction implements Serializable {
     }
 
     boolean equals(int specification, int condition, int opcode) {
-        return (this.specification == specification && (this.opcode==opcode || this.condition==condition));
+        if (this.specification == specification && this.opcode == opcode) {
+            if(specification==2 && this.condition==condition) // Branch
+                return true;
+            else if(specification!=2)
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -202,7 +208,7 @@ public class Instruction {
                 else
                     sig=offset*4;
 
-                System.out.printf("EXECUTE: %s with offset = %d", name, offset);
+                System.out.printf("EXECUTE: %s with offset = %d\n", name, offset);
 
                 if(condition==0 && Simulator.Z==1)
                     register_file[15]+=4+sig;

@@ -87,7 +87,7 @@ public class Simulator {
         if(ins.getName()==null)
             return;
 
-        System.out.printf("FETCH: Instruction %s from address 0x%d\n", instruction, register_file[15]);
+        System.out.printf("FETCH: Instruction %s from address 0x%s\n", instruction, Integer.toHexString(register_file[15]));
         register_file[15]+=4;
     }
 
