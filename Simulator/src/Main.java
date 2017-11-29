@@ -2,6 +2,10 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * Main class is used just for serializing the Instruction class to maintain a database
+ * for the supported instruction set.
+ */
 public class Main {
     static void deserialize(ArrayList<PresetInstruction> PresetInstructions) throws IOException, ClassNotFoundException {
         InputStream inputStream=new FileInputStream("PresetInstructions.dat");

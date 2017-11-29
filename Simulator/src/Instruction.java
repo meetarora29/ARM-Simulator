@@ -191,11 +191,11 @@ public class Instruction {
         else if(specification==1) {
             int index=operand2/4;
             if(opcode==25) {
-                System.out.printf("EXECUTE: Load from Data Memory value of %dth element from base %d to register R%d\n", index + 1, operand1, destination);
+                System.out.printf("EXECUTE: Load from Data Memory value of %d element from base %d to register R%d\n", index + 1, operand1, destination);
                 return data_MEM[operand1][index];
             }
             if(opcode==24) {
-                System.out.printf("EXECUTE: Store value in register R%d to the %dth element from base %d in Data Memory\n", destination, index+1, operand1);
+                System.out.printf("EXECUTE: Store value in register R%d to the %d element from base %d in Data Memory\n", destination, index+1, operand1);
                 return -2;
             }
         }
@@ -229,19 +229,21 @@ public class Instruction {
         return -1;
     }
 
-    int memory(int[][] data_MEM, int result) {
+    int memory(int[][] data_MEM, int result, int[] register_file) {
         if(specification==3)
             return result;
 
         if(condition==14) {
             if(opcode==25) {
                 System.out.printf("MEMORY: Load value %d from memory\n", data_MEM[operand1][operand2/4]);
-                result=data_MEM[operand1][operand2];
+                result=data_MEM[operand1][operand2/4];
             }
             else if(opcode==24) {
-                // TODO: Check
-                System.out.printf("MEMORY: Store value %d in memory\n", result);
-                data_MEM[operand1][operand2/4]=result;
+                if(result==-2) {
+                    result=register_file[destination];
+                    System.out.printf("MEMORY: Store value %d in memory\n", result);
+                    data_MEM[operand1][operand2/4]=result;
+                }
             }
             else
                 System.out.println("MEMORY: No memory operation");
