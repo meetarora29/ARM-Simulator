@@ -179,12 +179,12 @@ public class Simulator {
     }
 
     public static void main(String[] args) {
-        String file=args[0];
-
-        if (file == null) {
+        if (args.length==0) {
             System.out.printf("Invoke Correctly.");
             System.exit(0);
         }
+
+        String file=args[0];
 
         Instruction.deserialize();
 
