@@ -124,10 +124,17 @@ public class Instruction {
                 System.out.printf(two, name, operand1, operand2, destination, operand1, register_file[operand1]);
         }
         else if(specification==1) {
-            if(name.equals("LDR"))
-                System.out.printf(ldr, name, operand1, destination, operand2, operand1, register_file[operand1]);
-            else if(name.equals("STR"))
-                System.out.printf(str, name, operand1, destination, operand2, operand1, register_file[operand1], destination, register_file[destination]);
+            if(name.equals("LDR")) {
+                if(immediate==0)
+                    System.out.printf(ldr, name, operand1, destination, operand2, operand1, register_file[operand1]);
+                else if(immediate==1)
+                    System.out.printf(ldr, name, operand1, destination, register_file[operand2], operand1, register_file[operand1]);
+            } else if(name.equals("STR")) {
+                if(immediate==0)
+                    System.out.printf(str, name, operand1, destination, operand2, operand1, register_file[operand1], destination, register_file[destination]);
+                else if(immediate==1)
+                    System.out.printf(str, name, operand1, destination, register_file[operand2], operand1, register_file[operand1], destination, register_file[destination]);
+            }
         }
         else if(specification==2)
             System.out.printf(branch, name);
@@ -150,12 +157,16 @@ public class Instruction {
             case "==":
                 if (a == b) {
                     Simulator.Z=1;
+                    Simulator.N=0;
                     return 0;
                 }
                 if (a < b) {
                     Simulator.N=1;
+                    Simulator.Z=0;
                     return -1;
                 }
+                Simulator.Z=0;
+                Simulator.N=0;
                 return 1;
             case "|":
                 return a | b;
@@ -191,11 +202,20 @@ public class Instruction {
         else if(specification==1) {
             int index=operand2/4;
             if(opcode==25) {
-                System.out.printf("EXECUTE: Load from Data Memory value of %d element from base %d to register R%d\n", index + 1, operand1, destination);
-                return data_MEM[operand1][index];
+                if(immediate==0) {
+                    System.out.printf("EXECUTE: Load from Data Memory value of %d element from base %d to register R%d\n", index + 1, operand1, destination);
+                    return data_MEM[operand1][index];
+                }
+                else if(immediate==1) {
+                    System.out.printf("EXECUTE: Load from Data Memory value of %d element from base %d to register R%d\n", register_file[operand2], operand1, destination);
+                    return data_MEM[operand1][register_file[operand2]];
+                }
             }
             if(opcode==24) {
-                System.out.printf("EXECUTE: Store value in register R%d to the %d element from base %d in Data Memory\n", destination, index+1, operand1);
+                if(immediate==0)
+                    System.out.printf("EXECUTE: Store value in register R%d to the %d element from base %d in Data Memory\n", destination, index+1, operand1);
+                else if(immediate==1)
+                    System.out.printf("EXECUTE: Store value in register R%d to the %d element from base %d in Data Memory\n", destination, register_file[operand2], operand1);
                 return -2;
             }
         }
@@ -235,14 +255,23 @@ public class Instruction {
 
         if(condition==14) {
             if(opcode==25) {
-                System.out.printf("MEMORY: Load value %d from memory\n", data_MEM[operand1][operand2/4]);
-                result=data_MEM[operand1][operand2/4];
+                if(immediate==0) {
+                    System.out.printf("MEMORY: Load value %d from memory\n", data_MEM[operand1][operand2 / 4]);
+                    result = data_MEM[operand1][operand2 / 4];
+                }
+                else if(immediate==1) {
+                    System.out.printf("MEMORY: Load value %d from memory\n", data_MEM[operand1][register_file[operand2]]);
+                    result = data_MEM[operand1][register_file[operand2]];
+                }
             }
             else if(opcode==24) {
                 if(result==-2) {
                     result=register_file[destination];
                     System.out.printf("MEMORY: Store value %d in memory\n", result);
-                    data_MEM[operand1][operand2/4]=result;
+                    if(immediate==0)
+                        data_MEM[operand1][operand2/4]=result;
+                    else if(immediate==1)
+                        data_MEM[operand1][register_file[operand2]]=result;
                 }
             }
             else
