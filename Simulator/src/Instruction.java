@@ -201,29 +201,29 @@ public class Instruction {
         }
         else if(specification==2) {
             if(opcode==0) {
-                int sig;
+                int rel;
                 int bit=(offset>>23) & (0x1);
-                if(bit==1)
-                    sig=(0xFF000000) | (offset*4);
-                else
-                    sig=offset*4;
+                if(bit==1) {
+                    rel = (0xFF000000) | (offset * 4);
+                } else
+                    rel=offset*4;
 
                 System.out.printf("EXECUTE: %s with offset = %d\n", name, offset);
 
                 if(condition==0 && Simulator.Z==1)
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
                 else if(condition==1 && Simulator.Z!=1)
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
                 else if(condition==11 && Simulator.N==1 && Simulator.Z==0)
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
                 else if(condition==12 && Simulator.N==0 && Simulator.Z==0)
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
                 else if(condition==13 && (Simulator.N==1 || Simulator.Z==1))
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
                 else if(condition==10 && (Simulator.N==0 || Simulator.Z==1))
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
                 else if(condition==14)
-                    register_file[15]+=4+sig;
+                    register_file[15]+=4+rel;
             }
         }
         return -1;

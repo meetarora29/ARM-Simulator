@@ -49,12 +49,17 @@ public class temp {
 //        bytes[2]=(byte)(s>>>8);
 //        bytes[3]=(byte)(s>>>0);
 
-        ByteBuffer byteBuffer=ByteBuffer.allocate(4);
-        byteBuffer.putInt(Integer.parseUnsignedInt(s.toString()));
-        byte[] r=byteBuffer.array();
-        ByteBuffer wrap=ByteBuffer.wrap(r);
-        System.out.println(wrap.getInt());
-        Integer x=wrap.getInt();
-        System.out.println(x);
+//        ByteBuffer byteBuffer=ByteBuffer.allocate(4);
+//        byteBuffer.putInt(Integer.parseUnsignedInt(s.toString()));
+//        byte[] r=byteBuffer.array();
+//        ByteBuffer wrap=ByteBuffer.wrap(r);
+//        System.out.println(wrap.getInt());
+//        Integer x=wrap.getInt();
+//        System.out.println(x);
+
+        Long one= 16777209L;
+        Long two= (long) (16777209 << 2);
+        System.out.println(Long.toBinaryString(one));
+        System.out.println(Long.toBinaryString(two));
     }
 }
